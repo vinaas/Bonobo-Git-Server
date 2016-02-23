@@ -31,18 +31,18 @@ namespace Bonobo.Git.Server
 
         public static Guid Id(this IPrincipal user)
         {
-            string id = user.GetClaim(ClaimTypes.Upn);
+            string id = user.GetClaim(ClaimTypes.NameIdentifier);
             return id != null ? Guid.Parse(id) : Guid.Empty;
         }
 
         public static string Username(this IPrincipal user)
         {
-            return user.GetClaim(ClaimTypes.NameIdentifier);
+            return user.GetClaim(ClaimTypes.Name);
         }
 
         public static string Name(this IPrincipal user)
         {
-            return user.GetClaim(ClaimTypes.Name);
+            return string.Format("{0} {1}", user.GetClaim(ClaimTypes.GivenName), user.GetClaim(ClaimTypes.Surname));
         }
 
         public static bool IsWindowsAuthenticated(this IPrincipal user)
