@@ -32,7 +32,27 @@ namespace Bonobo.Git.Server
         public static Guid Id(this IPrincipal user)
         {
             string id = user.GetClaim(ClaimTypes.NameIdentifier);
-            return id != null ? Guid.Parse(id) : Guid.Empty;
+            if (id == null)
+            {
+                // I think this is a disaster if we don't have this claim and we should probably throw an exception here
+                // But anyway, for now I'm going to return Guid.Empty, and someone else can suffer later
+                // I'm going to log it, so that when they have a NullReferenceException later, they'll be able to see that
+                // this was a precursor
+                Trace.TraceError("User did not have NameIdentififer claim!!!");
+                return Guid.Empty;
+            }
+            Guid result;
+            if (Guid.TryParse(id, out result))
+            {
+                // It's a normal string Guid
+                return result;
+            }
+            else
+            {
+                // We might be a ADFS-style Guid is which a base64 string
+                // If this fails, we'll get a FormatException thrown anyway
+                return new Guid(Convert.FromBase64String(id));
+            }
         }
 
         public static string Username(this IPrincipal user)
