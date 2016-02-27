@@ -13,7 +13,7 @@ namespace Bonobo.Git.Server.Data
         IList<RepositoryModel> GetTeamRepositories(Guid[] teamsId);
         IList<RepositoryModel> GetAdministratedRepositories(Guid userId);
         RepositoryModel GetRepository(Guid id);
-        RepositoryModel GetRepository(string Name);
+        RepositoryModel GetRepository(string Name, bool caseSensitive = true);
         bool Create(RepositoryModel repository);
         void Update(RepositoryModel repository);
         void Delete(Guid id);
