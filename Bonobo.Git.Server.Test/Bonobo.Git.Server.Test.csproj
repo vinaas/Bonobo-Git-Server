@@ -143,6 +143,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="IntegrationTests\Controller\SettingsControllerTests.cs" />
     <Compile Include="IntegrationTests\IntegrationTestHelpers.cs" />
     <Compile Include="MembershipTests\ADBackendStoreTest.cs" />
     <Compile Include="MembershipTests\ADMembershipServiceTest.cs" />
