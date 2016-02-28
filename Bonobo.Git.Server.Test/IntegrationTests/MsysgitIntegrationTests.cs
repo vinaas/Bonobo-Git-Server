@@ -12,6 +12,8 @@ using Bonobo.Git.Server.Models;
 using System.Text;
 using System.Threading;
 
+using Bonobo.Git.Server.Test.IntegrationTests.Helpers;
+
 namespace Bonobo.Git.Server.Test.Integration.ClAndWeb
 {
     /// <summary>
@@ -106,7 +108,7 @@ namespace Bonobo.Git.Server.Test.Integration.ClAndWeb
 
                 try
                 {
-                    Guid repo_id = CreateRepositoryOnWebInterface();
+                    Guid repo_id = IntegrationTestHelpers.CreateRepositoryOnWebInterface(app, RepositoryName);
                     CloneEmptyRepositoryWithCredentials(git, resource);
                     CreateIdentity(git);
                     CreateAndPushFiles(git, resource);
@@ -121,7 +123,7 @@ namespace Bonobo.Git.Server.Test.Integration.ClAndWeb
                     InitAndPullRepository(git, resource);
                     PullTag(git, resource);
                     PullBranch(git, resource);
-                    DeleteRepository(repo_id);
+                    IntegrationTestHelpers.DeleteRepository(app, repo_id);
                 }
                 finally
                 {
@@ -147,12 +149,12 @@ namespace Bonobo.Git.Server.Test.Integration.ClAndWeb
                 var resource = gitres.Item2;
                 try
                 {
-                    Guid repo_id = CreateRepositoryOnWebInterface();
+                    Guid repo_id = IntegrationTestHelpers.CreateRepositoryOnWebInterface(app, RepositoryName);
                     AllowAnonRepoClone(repo_id, false);
                     CloneRepoAnon(git, resource, false);
                     AllowAnonRepoClone(repo_id, true);
                     CloneRepoAnon(git, resource, true);
-                    DeleteRepository(repo_id);
+                    IntegrationTestHelpers.DeleteRepository(app, repo_id);
                 }
                 finally
                 {
@@ -201,11 +203,11 @@ namespace Bonobo.Git.Server.Test.Integration.ClAndWeb
             Directory.CreateDirectory(WorkingDirectory);
 
             try{
-                var repo_id = CreateRepositoryOnWebInterface();
+                var repo_id = IntegrationTestHelpers.CreateRepositoryOnWebInterface(app, RepositoryName);
                 CloneEmptyRepositoryWithCredentials(git, resource);
                 CreateIdentity(git);
                 CreateAndAddTestFiles(git, 2000);
-                DeleteRepository(repo_id);
+                IntegrationTestHelpers.DeleteRepository(app, repo_id);
             }
             finally
             {
@@ -230,7 +232,7 @@ namespace Bonobo.Git.Server.Test.Integration.ClAndWeb
                 }
                 else
                 {
-                    var repo_id = CreateRepositoryOnWebInterface();
+                    var repo_id = IntegrationTestHelpers.CreateRepositoryOnWebInterface(app, RepositoryName);
                     AllowAnonRepoClone(repo_id, true);
                     CloneRepoAnon(git, resource, true);
                     CreateIdentity(git);
@@ -244,7 +246,7 @@ namespace Bonobo.Git.Server.Test.Integration.ClAndWeb
                     SetAnonPush(git, true);
                     PushFiles(git, resource, true);
 
-                    DeleteRepository(repo_id);
+                    IntegrationTestHelpers.DeleteRepository(app, repo_id);
                 }
             }
             finally
@@ -252,6 +254,12 @@ namespace Bonobo.Git.Server.Test.Integration.ClAndWeb
                 DeleteDirectory(WorkingDirectory);
             }
 
+        }
+
+        [TestMethod, TestCategory(TestCategories.ClAndWebIntegrationTest)]
+        public void NavigateReposWithDropdown()
+        {
+            
         }
 
         private void PushFiles(string git, MsysgitResources resource, bool success)
@@ -333,44 +341,6 @@ namespace Bonobo.Git.Server.Test.Integration.ClAndWeb
         {
             RunGitOnRepo(git, "config user.name \"McFlono McFloonyloo\"");
             RunGitOnRepo(git, "config user.email \"DontBotherMe@home.never\"");
-        }
-
-        private void DeleteRepository(Guid guid)
-        {
-            app.NavigateTo<RepositoryController>(c => c.Delete(guid));
-            app.FindFormFor<RepositoryDetailModel>().Submit();
-
-            // make sure it no longer is listed
-            app.NavigateTo<RepositoryController>(c => c.Index(null, null));
-            try
-            {
-                var ele = app.Browser.FindElement(By.Id("Repositories"));
-                Assert.Fail("Table should not exist without repositories!");
-            }
-            catch (NoSuchElementException exc)
-            {
-                if (!exc.Message.Contains(" == Repositories"))
-                {
-                    throw;
-                }
-            }
-        }
-
-        private Guid CreateRepositoryOnWebInterface()
-        {
-            app.NavigateTo<RepositoryController>(c => c.Create());
-            app.FindFormFor<RepositoryDetailModel>()
-                .Field(f => f.Name).SetValueTo("Integration")
-                .Submit();
-
-            // ensure it appears on the listing
-            app.NavigateTo<RepositoryController>(c => c.Index(null, null));
-
-            var rpm = app.FindDisplayFor<IEnumerable<RepositoryDetailModel>>();
-            //var l_to = app.FindLinkTo<RepositoryController>(c => c.Detail(Guid.NewGuid()));
-            var repo_item = rpm.DisplayFor(s => s.First().Name);
-            Assert.AreEqual(repo_item.Text, "Integration");
-            return new Guid(repo_item.GetAttribute("data-repo-id"));
         }
 
         private void PullBranch(string git, MsysgitResources resource)
